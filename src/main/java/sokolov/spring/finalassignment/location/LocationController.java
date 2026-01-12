@@ -25,8 +25,11 @@ public class LocationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LocationDto>> getAllLocations(){
-        return ResponseEntity.ok(locationService.getAll().stream().map(locationDtoConverter::toDto).toList());
+    public ResponseEntity<List<LocationDto>> getAllLocations() {
+        return ResponseEntity.ok(locationService.getAll().stream()
+                .map(locationDtoConverter::toDto)
+                .toList()
+        );
     }
 
     @PostMapping
@@ -40,8 +43,8 @@ public class LocationController {
     @PutMapping(path = "/{id}")
     public ResponseEntity<LocationDto> updateLocation(
             @PathVariable Long id,
-            @Valid @RequestBody LocationDto locationDto){
-        logger.info("update location by id= {}, value:{}",id, locationDto);
+            @Valid @RequestBody LocationDto locationDto) {
+        logger.info("update location by id= {}, value:{}", id, locationDto);
         return ResponseEntity.ok(locationDtoConverter.toDto(locationService.update(id, locationDtoConverter.fromDto(locationDto))));
 
     }
@@ -49,14 +52,14 @@ public class LocationController {
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<Void> deleteLocation(
             @PathVariable Long id
-    ){
+    ) {
         logger.info("delete location by id= {}", id);
         locationService.delete(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @GetMapping(path =  "/{id}")
-    public ResponseEntity<LocationDto> getLocationById(@PathVariable Long id){
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<LocationDto> getLocationById(@PathVariable Long id) {
         logger.info("get location by id= {}", id);
         return ResponseEntity.ok(locationDtoConverter.toDto(locationService.getById(id)));
     }

@@ -31,7 +31,7 @@ public class LocationService {
     }
 
     public Location update(Long id, @Valid Location location) {
-        if (!locationRepository.existsById(id)){
+        if (!locationRepository.existsById(id)) {
             throw new EntityNotFoundException("Not found Location by id = %s".formatted(id));
         }
         LocationEntity locationEntity = locationRepository.getReferenceById(id);
@@ -45,7 +45,7 @@ public class LocationService {
     }
 
     public void delete(Long id) {
-        if (!locationRepository.existsById(id)){
+        if (!locationRepository.existsById(id)) {
             throw new EntityNotFoundException("Not found Location by id = %s".formatted(id));
         }
         locationRepository.deleteById(id);

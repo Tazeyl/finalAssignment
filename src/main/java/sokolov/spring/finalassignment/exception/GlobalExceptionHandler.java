@@ -19,28 +19,26 @@ public class GlobalExceptionHandler {
     private static final String GOT_EXCEPTION = "Got exception";
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorMessageResponse> handleNoSuchElementException(EntityNotFoundException e){
+    public ResponseEntity<ErrorMessageResponse> handleNoSuchElementException(EntityNotFoundException e) {
         log.error(GOT_EXCEPTION, e);
-        var errorDto =  new ErrorMessageResponse(
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Сущность не найдена",
-        e.getMessage(),
+                e.getMessage(),
                 LocalDateTime.now()
         );
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(errorDto);
-
-
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException e){
+    public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error(GOT_EXCEPTION, e);
         String detailedMessage = e.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        var errorDto =  new ErrorMessageResponse(
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Ошибка валидации запроса",
                 detailedMessage,
                 LocalDateTime.now()
@@ -49,14 +47,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorDto);
-
-
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorMessageResponse> handleException(Exception e){
+    public ResponseEntity<ErrorMessageResponse> handleException(Exception e) {
         log.error(GOT_EXCEPTION, e);
-        var errorDto =  new ErrorMessageResponse(
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Внутренняя ошибка",
                 e.getMessage(),
                 LocalDateTime.now()
