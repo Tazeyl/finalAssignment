@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
     private static final String GOT_EXCEPTION = "Got exception";
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorMessageResponse> handleNoSuchElementException(EntityNotFoundException e) {
+    public ResponseEntity<ErrorMessageResponse> handleEntityNotFoundException(EntityNotFoundException e) {
         log.error(GOT_EXCEPTION, e);
         ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Сущность не найдена",
