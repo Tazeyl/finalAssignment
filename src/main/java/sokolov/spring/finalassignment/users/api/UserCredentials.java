@@ -1,8 +1,8 @@
-package sokolov.spring.finalassignment.users;
+package sokolov.spring.finalassignment.users.api;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record SigninRequest(
+public record UserCredentials(
         @NotBlank
         String login,
         @NotBlank

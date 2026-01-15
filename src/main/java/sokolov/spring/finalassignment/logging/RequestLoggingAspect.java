@@ -1,5 +1,6 @@
 package sokolov.spring.finalassignment.logging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -11,15 +12,17 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Aspect
 @Component
 public class RequestLoggingAspect {
 
-    private static final Logger logger = LoggerFactory.getLogger(RequestLoggingAspect.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingAspect.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Around("@annotation(org.springframework.web.bind.annotation.RequestMapping) || " +
@@ -48,28 +51,32 @@ public class RequestLoggingAspect {
 
     private void logIncomingRequest(HttpServletRequest request, Object[] args) {
         try {
-            logger.info("""
+            LOGGER.info("""
                 === INCOMING REQUEST ===
                 Method: {}
                 URL: {}
                 Parameters: {}
                 Arguments: {}
+                Header: {}
                 Client IP: {}
                 """,
                     request.getMethod(),
                     request.getRequestURL(),
                     request.getParameterMap(),
-                    objectMapper.writeValueAsString(args),
+                    Arrays.stream(args)
+                            .map(this::apply)
+                            .collect(Collectors.joining(", ")),
+                    getHeadersAsString(request),
                     request.getRemoteAddr()
             );
         } catch (Exception e) {
-            logger.warn("Failed to log request", e);
+            LOGGER.warn("Failed to log request", e);
         }
     }
 
     private void logOutgoingResponse(HttpServletRequest request, Object result, long executionTime) {
         try {
-            logger.info("""
+            LOGGER.info("""
                 === OUTGOING RESPONSE ===
                 Method: {}
                 URL: {}
@@ -84,7 +91,7 @@ public class RequestLoggingAspect {
                     "SUCCESS"
             );
         } catch (Exception e) {
-            logger.warn("Failed to log response", e);
+            LOGGER.warn("Failed to log response", e);
         }
     }
 
@@ -96,5 +103,13 @@ public class RequestLoggingAspect {
             headers.put(headerName, request.getHeader(headerName));
         }
         return headers.toString();
+    }
+
+    private String apply(Object t) {
+        try {
+            return objectMapper.writeValueAsString(t);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 }

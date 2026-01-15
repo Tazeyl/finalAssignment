@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomAuthenticationEntryPoint.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomAccessDeniedHandler.class);
 
     private final ObjectMapper objectMapper;
 
@@ -29,10 +29,12 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        log.error("Handling access denied exception", accessDeniedException);
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        LOGGER.error("Handling access denied exception", accessDeniedException);
         var messageResponse = new ErrorMessageResponse(
-                "Forbidden",
+                "Недостаточно прав для выполнения операции",
                 accessDeniedException.getMessage(),
                 LocalDateTime.now()
         );

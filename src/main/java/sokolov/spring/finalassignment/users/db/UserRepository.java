@@ -1,4 +1,4 @@
-package sokolov.spring.finalassignment.users;
+package sokolov.spring.finalassignment.users.db;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

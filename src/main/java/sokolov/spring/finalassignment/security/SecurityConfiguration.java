@@ -13,22 +13,35 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import sokolov.spring.finalassignment.security.jwt.JwtTokenFilter;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired
-    private CustomUserDetailService customUserDetailService;
-    @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-    @Autowired
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomUserDetailService customUserDetailService;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final JwtTokenFilter jwtTokenFilter;
+
+    public SecurityConfiguration(CustomUserDetailService customUserDetailService,
+                                 CustomAccessDeniedHandler customAccessDeniedHandler,
+                                 CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                                 JwtTokenFilter jwtTokenFilter) {
+        this.customUserDetailService = customUserDetailService;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+        this.jwtTokenFilter = jwtTokenFilter;
+    }
+
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         return http
                 .formLogin(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
@@ -37,13 +50,28 @@ public class SecurityConfiguration {
                         request
                                 .requestMatchers(HttpMethod.POST,"/users")
                                 .permitAll()
+                                .requestMatchers(HttpMethod.POST,"/users/auth")
+                                .permitAll()
+                                // Разрешаем доступ к Swagger без аутентификации
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/api-docs/**",
+                                        "/api-docs.yaml",
+                                        "/swagger-resources/**",
+                                        "/webjars/**",
+                                        "/configuration/**",
+                                        "/event-manager-openapi.yaml",
+                                        "/v3/api-docs/swagger-config"
+
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exeption ->
                                 exeption.authenticationEntryPoint(customAuthenticationEntryPoint)
                                         .accessDeniedHandler(customAccessDeniedHandler)
                         )
-                .httpBasic(Customizer.withDefaults())
+                .addFilterBefore(jwtTokenFilter, AnonymousAuthenticationFilter.class)
                 .build();
     }
 
@@ -57,7 +85,12 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationProvider authenticationProvider(){
         var auth = new DaoAuthenticationProvider(customUserDetailService);
-        auth.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        auth.setPasswordEncoder(passwordEncoder());
         return auth;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 }
