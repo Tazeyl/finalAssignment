@@ -64,4 +64,18 @@ public class GlobalExceptionHandler {
 
 
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorMessageResponse> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+        log.error(GOT_EXCEPTION, e);
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
+                "Пользователь уже существует",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
 }
