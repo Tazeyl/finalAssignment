@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.web.bind.annotation.*;
-import sokolov.spring.finalassignment.security.jwt.JwtAuthenticationService;
+import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
 import sokolov.spring.finalassignment.users.domain.UserService;
 
@@ -19,11 +19,11 @@ public class UsersController {
 
     private final UserService userService;
 
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final AuthenticationService authenticationService;
 
-    public UsersController(UserService userService, JwtAuthenticationService jwtAuthenticationService) {
+    public UsersController(UserService userService, AuthenticationService authenticationService) {
         this.userService = userService;
-        this.jwtAuthenticationService = jwtAuthenticationService;
+        this.authenticationService = authenticationService;
     }
 
 
@@ -42,7 +42,7 @@ public class UsersController {
             @RequestBody @Valid UserCredentials userCredentials
     ) {
         LOGGER.info("Get Request sign in User login = {}", userCredentials.login());
-        String token = jwtAuthenticationService.authenticateUser(userCredentials);
+        String token = authenticationService.authenticateUser(userCredentials);
 
         return ResponseEntity.ok(new JwtResponse(token));
 

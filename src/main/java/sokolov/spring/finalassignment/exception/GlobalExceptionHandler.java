@@ -93,4 +93,18 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.FORBIDDEN)
                 .body(errorDto);
     }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorMessageResponse> handleBusinessException(BusinessException e) {
+        LOGGER.error(GOT_EXCEPTION, e);
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
+                "Бизнес ошибка",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
 }
