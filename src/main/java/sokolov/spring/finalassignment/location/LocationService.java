@@ -9,6 +9,8 @@ import java.util.List;
 @Service
 public class LocationService {
 
+    private static final String ENTITY_NOT_FOUND = "Not found Location by id = %s";
+
     private final LocationRepository locationRepository;
     private final LocationEntityConverter locationEntityConverter;
 
@@ -16,7 +18,6 @@ public class LocationService {
         this.locationRepository = locationRepository;
         this.locationEntityConverter = locationEntityConverter;
     }
-
 
     public List<Location> getAll() {
         return locationRepository.findAll().stream()
@@ -31,10 +32,7 @@ public class LocationService {
     }
 
     public Location update(Long id, @Valid Location location) {
-        if (!locationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Not found Location by id = %s".formatted(id));
-        }
-        LocationEntity locationEntity = locationRepository.getReferenceById(id);
+        LocationEntity locationEntity = getLocationEntityById(id);
         locationEntity.setName(location.name());
         locationEntity.setAddress(location.address());
         locationEntity.setCapacity(location.capacity());
@@ -46,12 +44,23 @@ public class LocationService {
 
     public void delete(Long id) {
         if (!locationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Not found Location by id = %s".formatted(id));
+            throw new EntityNotFoundException(ENTITY_NOT_FOUND.formatted(id));
         }
         locationRepository.deleteById(id);
     }
 
     public Location getById(Long id) {
-        return locationEntityConverter.fromEntity(locationRepository.getReferenceById(id));
+        return locationEntityConverter.fromEntity(getLocationEntityById(id));
+    }
+
+    private LocationEntity getLocationEntityById(Long id){
+        if (!locationRepository.existsById(id)) {
+            throw new EntityNotFoundException(ENTITY_NOT_FOUND.formatted(id));
+        }
+        return locationRepository.getReferenceById(id);
+    }
+
+    public boolean existsById(Long id){
+        return locationRepository.existsById(id);
     }
 }
