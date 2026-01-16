@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,12 +16,12 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String GOT_EXCEPTION = "Got exception";
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorMessageResponse> handleEntityNotFoundException(EntityNotFoundException e) {
-        log.error(GOT_EXCEPTION, e);
+        LOGGER.error(GOT_EXCEPTION, e);
         ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Сущность не найдена",
                 e.getMessage(),
@@ -34,7 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException e) {
-        log.error(GOT_EXCEPTION, e);
+        LOGGER.error(GOT_EXCEPTION, e);
         String detailedMessage = e.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining(", "));
@@ -51,7 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessageResponse> handleException(Exception e) {
-        log.error(GOT_EXCEPTION, e);
+        LOGGER.error(GOT_EXCEPTION, e);
         ErrorMessageResponse errorDto = new ErrorMessageResponse(
                 "Внутренняя ошибка",
                 e.getMessage(),
@@ -63,5 +64,33 @@ public class GlobalExceptionHandler {
                 .body(errorDto);
 
 
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorMessageResponse> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+        LOGGER.error(GOT_EXCEPTION, e);
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
+                "Пользователь уже существует",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorMessageResponse> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        LOGGER.error(GOT_EXCEPTION, e);
+        ErrorMessageResponse errorDto = new ErrorMessageResponse(
+                "Недостаточно прав для выполнения операции",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(errorDto);
     }
 }
