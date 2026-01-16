@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sokolov.spring.finalassignment.events.api.EventDto;
 import sokolov.spring.finalassignment.events.api.EventDtoConverter;
-import sokolov.spring.finalassignment.events.domain.RegistrationEventService;
+import sokolov.spring.finalassignment.events.domain.registration.RegistrationEventService;
 
 import java.util.List;
 

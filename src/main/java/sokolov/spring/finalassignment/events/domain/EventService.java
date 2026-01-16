@@ -2,6 +2,8 @@ package sokolov.spring.finalassignment.events.domain;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
 import sokolov.spring.finalassignment.users.domain.UserRole;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +28,8 @@ import java.util.Objects;
 @Service
 public class EventService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
+
     private static final String ENTITY_NOT_FOUND = "Not found Event by id = %s";
 
     private final EventRepository eventRepository;
@@ -32,7 +37,10 @@ public class EventService {
     private final EventEntityConverter eventEntityConverter;
     private final AuthenticationService authenticationService;
 
-    public EventService(EventRepository eventRepository, LocationService locationService, EventEntityConverter eventEntityConverter, AuthenticationService authenticationService) {
+    public EventService(EventRepository eventRepository,
+                        LocationService locationService,
+                        EventEntityConverter eventEntityConverter,
+                        AuthenticationService authenticationService) {
         this.eventRepository = eventRepository;
         this.locationService = locationService;
         this.eventEntityConverter = eventEntityConverter;
@@ -291,5 +299,29 @@ public class EventService {
             throw new IllegalArgumentException("На мероприятие никто не зарегистрирован");
         }
         eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces()-1);
+    }
+
+    @Transactional
+    @Modifying
+    public void scheduleEvents() {
+        List<EventEntity> scheduledEvent = eventRepository.getAllWillStart(EventStatus.WAIT_START, LocalDateTime.now());
+        scheduledEvent.forEach(t -> moveToNewStatusEvent(t, EventStatus.STARTED));
+
+        scheduledEvent = eventRepository.getAllWillFinish(EventStatus.STARTED, LocalDateTime.now());
+        scheduledEvent.forEach(t -> moveToNewStatusEvent(t, EventStatus.FINISHED));
+    }
+
+    private void moveToNewStatusEvent(EventEntity eventEntity, EventStatus newEventStatus) {
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED) ||
+                Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)){
+            throw new IllegalArgumentException("Попытка перевести мероприятие в некорректный статус");
+        }
+        if (Objects.equals(eventEntity.getStatus(), newEventStatus)){
+            LOGGER.error("Попытка перевести event id = {} в тот же статус {}", eventEntity.getId(), newEventStatus);
+            return;
+        }
+
+        eventEntity.setStatus(newEventStatus);
+
     }
 }

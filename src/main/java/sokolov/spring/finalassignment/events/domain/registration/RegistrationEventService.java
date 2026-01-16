@@ -1,4 +1,4 @@
-package sokolov.spring.finalassignment.events.domain;
+package sokolov.spring.finalassignment.events.domain.registration;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import sokolov.spring.finalassignment.events.db.EventEntityConverter;
 import sokolov.spring.finalassignment.events.db.registration.RegistrationEntity;
 import sokolov.spring.finalassignment.events.db.registration.RegistrationEventRepository;
+import sokolov.spring.finalassignment.events.domain.Event;
+import sokolov.spring.finalassignment.events.domain.EventService;
 import sokolov.spring.finalassignment.exception.BusinessException;
 import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
