@@ -53,13 +53,13 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     private void logIncomingRequest(HttpServletRequest request, Object[] args) {
         try {
             LOGGER.debug("""
-                === INCOMING REQUEST ===
-                Method: {}
-                URL: {}
-                Parameters: {}
-                Arguments: {}
-                Client IP: {}
-                """,
+                            === INCOMING REQUEST ===
+                            Method: {}
+                            URL: {}
+                            Parameters: {}
+                            Arguments: {}
+                            Client IP: {}
+                            """,
                     request.getMethod(),
                     request.getRequestURL(),
                     request.getParameterMap(),

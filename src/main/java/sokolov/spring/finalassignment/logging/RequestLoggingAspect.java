@@ -1,6 +1,8 @@
 package sokolov.spring.finalassignment.logging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -9,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -52,14 +52,14 @@ public class RequestLoggingAspect {
     private void logIncomingRequest(HttpServletRequest request, Object[] args) {
         try {
             LOGGER.info("""
-                === INCOMING REQUEST ===
-                Method: {}
-                URL: {}
-                Parameters: {}
-                Arguments: {}
-                Header: {}
-                Client IP: {}
-                """,
+                            === INCOMING REQUEST ===
+                            Method: {}
+                            URL: {}
+                            Parameters: {}
+                            Arguments: {}
+                            Header: {}
+                            Client IP: {}
+                            """,
                     request.getMethod(),
                     request.getRequestURL(),
                     request.getParameterMap(),
@@ -77,13 +77,13 @@ public class RequestLoggingAspect {
     private void logOutgoingResponse(HttpServletRequest request, Object result, long executionTime) {
         try {
             LOGGER.info("""
-                === OUTGOING RESPONSE ===
-                Method: {}
-                URL: {}
-                Response: {}
-                Execution Time: {} ms
-                Status: {}
-                """,
+                            === OUTGOING RESPONSE ===
+                            Method: {}
+                            URL: {}
+                            Response: {}
+                            Execution Time: {} ms
+                            Status: {}
+                            """,
                     request.getMethod(),
                     request.getRequestURL(),
                     objectMapper.writeValueAsString(result),

@@ -1,20 +1,17 @@
 package sokolov.spring.finalassignment.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
@@ -48,9 +45,9 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers(HttpMethod.POST,"/users")
+                                .requestMatchers(HttpMethod.POST, "/users")
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST,"/users/auth")
+                                .requestMatchers(HttpMethod.POST, "/users/auth")
                                 .permitAll()
                                 // Разрешаем доступ к Swagger без аутентификации
                                 .requestMatchers(
@@ -68,9 +65,9 @@ public class SecurityConfiguration {
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exeption ->
-                                exeption.authenticationEntryPoint(customAuthenticationEntryPoint)
-                                        .accessDeniedHandler(customAccessDeniedHandler)
-                        )
+                        exeption.authenticationEntryPoint(customAuthenticationEntryPoint)
+                                .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .addFilterBefore(jwtTokenFilter, AnonymousAuthenticationFilter.class)
                 .build();
     }
@@ -83,14 +80,14 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(){
+    public AuthenticationProvider authenticationProvider() {
         var auth = new DaoAuthenticationProvider(customUserDetailService);
         auth.setPasswordEncoder(passwordEncoder());
         return auth;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

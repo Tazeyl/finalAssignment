@@ -31,7 +31,7 @@ public class EventRegistrationController {
     @PreAuthorize("hasAuthority(\"USER\")")
     public ResponseEntity<Void> registerUserByEvent(
             @PathVariable Long id
-    ){
+    ) {
         LOGGER.info("Get register by current user event id = {}", id);
         eventRegistrationService.registerCurrentUserByEvent(id);
         return ResponseEntity.status(HttpStatus.OK).build();
@@ -42,7 +42,7 @@ public class EventRegistrationController {
     @PreAuthorize("hasAuthority(\"USER\")")
     public ResponseEntity<Void> deleteRegistrationUserByEvent(
             @PathVariable Long id
-    ){
+    ) {
         LOGGER.info("Get delete registration by current user event id = {}", id);
         eventRegistrationService.deleteRegistrationCurrentUserByEvent(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -51,7 +51,7 @@ public class EventRegistrationController {
     @GetMapping(path = "/my")
     @PreAuthorize("hasAuthority(\"USER\")")
     public ResponseEntity<List<EventDto>> getAllEventRegistrationByCurrentUser(
-    ){
+    ) {
         LOGGER.info("Get all registration events by current user");
         return ResponseEntity.status(HttpStatus.OK).body(
                 eventRegistrationService.getAllEventRegistrationByCurrentUser().stream()

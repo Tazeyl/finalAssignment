@@ -7,7 +7,7 @@ import sokolov.spring.finalassignment.events.domain.Event;
 @Component
 public class EventEntityConverter {
 
-    public Event from(EventEntity eventEntity){
+    public Event from(EventEntity eventEntity) {
 
         return new Event(
                 eventEntity.getId(),
@@ -23,7 +23,7 @@ public class EventEntityConverter {
         );
     }
 
-    public EventEntity to(Event event){
+    public EventEntity to(Event event) {
         return new EventEntity(
                 event.id(),
                 event.name(),

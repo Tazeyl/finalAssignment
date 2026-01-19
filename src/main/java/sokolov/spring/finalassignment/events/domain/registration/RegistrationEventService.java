@@ -37,13 +37,13 @@ public class RegistrationEventService {
     @Transactional
     @Modifying
     public void registerCurrentUserByEvent(Long evenId) {
-     User user = authenticationService.getCurrentUser();
+        User user = authenticationService.getCurrentUser();
         Event event = eventService.getEventById(evenId);
-        if (registrationEventRepository.existsByUserIdAndEventId(user.id(), evenId)){
+        if (registrationEventRepository.existsByUserIdAndEventId(user.id(), evenId)) {
             throw new BusinessException("Вы уже зарегестированы на мероприятие с id = %s".formatted(event.id()));
         }
 
-        if (event.occupiedPlaces() >= event.maxPlaces() ){
+        if (event.occupiedPlaces() >= event.maxPlaces()) {
             throw new BusinessException("На мероприятия уже зарегистрировано максимальное количество");
         }
 
@@ -72,7 +72,7 @@ public class RegistrationEventService {
         User user = authenticationService.getCurrentUser();
         RegistrationEntity registrationEntity =
                 registrationEventRepository.findAllByUserIdAndEventId(user.id(), eventId);
-        if (registrationEntity == null){
+        if (registrationEntity == null) {
             throw new BusinessException("Вы не зарегестрированы на событие id = %s".formatted(eventId));
         }
         registrationEventRepository.delete(registrationEntity);

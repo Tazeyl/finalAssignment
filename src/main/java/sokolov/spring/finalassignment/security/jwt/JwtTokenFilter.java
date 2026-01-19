@@ -38,18 +38,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")){
-            filterChain.doFilter(request,response);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
             return;
         }
 
         String jwtToken = authorizationHeader.substring(BEARER_LENGTH);
         String loginFromToken;
         try {
-         loginFromToken= jwtTokenManager.getLoginFromToken(jwtToken);
+            loginFromToken = jwtTokenManager.getLoginFromToken(jwtToken);
         } catch (Exception e) {
             LOGGER.error("Error while reading jwtToken", e);
-            filterChain.doFilter(request,response);
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -65,7 +65,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext()
                 .setAuthentication(token);
 
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
 
     }
 }

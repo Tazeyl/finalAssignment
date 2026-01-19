@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.web.bind.annotation.*;
 import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
@@ -60,7 +59,7 @@ public class UsersController {
         return ResponseEntity.ok(to(user));
     }
 
-    private UserDto to(User user){
+    private UserDto to(User user) {
         return new UserDto(user.id(), user.login(), user.age(), user.role().toString());
     }
 }
