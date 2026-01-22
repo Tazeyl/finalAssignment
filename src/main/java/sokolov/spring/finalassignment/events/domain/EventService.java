@@ -15,6 +15,7 @@ import sokolov.spring.finalassignment.events.db.EventRepository;
 import sokolov.spring.finalassignment.exception.BusinessException;
 import sokolov.spring.finalassignment.location.Location;
 import sokolov.spring.finalassignment.location.LocationService;
+import sokolov.spring.finalassignment.notification.NotificationService;
 import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
 import sokolov.spring.finalassignment.users.domain.UserRole;
@@ -36,15 +37,17 @@ public class EventService {
     private final LocationService locationService;
     private final EventEntityConverter eventEntityConverter;
     private final AuthenticationService authenticationService;
+    private final NotificationService notificationService;
 
     public EventService(EventRepository eventRepository,
                         LocationService locationService,
                         EventEntityConverter eventEntityConverter,
-                        AuthenticationService authenticationService) {
+                        AuthenticationService authenticationService, NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.locationService = locationService;
         this.eventEntityConverter = eventEntityConverter;
         this.authenticationService = authenticationService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -84,7 +87,10 @@ public class EventService {
             throw new BusinessException("Невозможно удалить событие в статусе, отличающееся от WAIT_START");
         }
 
+
         eventEntity.setStatus(EventStatus.CANCELLED);
+
+        notificationService.sendNotification(eventEntityConverter.from(eventEntity), null, NotificationType.DELETE);
         eventRepository.save(eventEntity);
 
     }
@@ -106,6 +112,7 @@ public class EventService {
     public Event updateEvent(Long eventId, Event event) {
         User currentUser = authenticationService.getCurrentUser();
         EventEntity eventEntity = getEventEntityById(eventId);
+        var oldEvent = eventEntityConverter.from(eventEntity);
 
         if (!Objects.equals(currentUser.role(), UserRole.ADMIN)
                 && !Objects.equals(eventEntity.getOwnerId(), currentUser.id())
@@ -140,8 +147,9 @@ public class EventService {
         }
         eventEntity.setMaxPlaces(newMaxPlaces);
         EventEntity saved = eventRepository.save(eventEntity);
-
-        return eventEntityConverter.from(saved);
+        var savedEvent = eventEntityConverter.from(saved);
+        notificationService.sendNotification(oldEvent, savedEvent, NotificationType.UPDATE);
+        return savedEvent;
 
     }
 
@@ -320,8 +328,11 @@ public class EventService {
             LOGGER.error("Попытка перевести event id = {} в тот же статус {}", eventEntity.getId(), newEventStatus);
             return;
         }
-
+        var oldEvent = eventEntityConverter.from(eventEntity);
         eventEntity.setStatus(newEventStatus);
+        var newEvent = eventEntityConverter.from(eventEntity);
+
+        notificationService.sendNotification(oldEvent, newEvent, NotificationType.STATUSCHANGE);
 
     }
 }
