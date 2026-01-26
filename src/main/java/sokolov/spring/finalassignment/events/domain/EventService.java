@@ -90,7 +90,10 @@ public class EventService {
 
         eventEntity.setStatus(EventStatus.CANCELLED);
 
-        notificationService.sendNotification(eventEntityConverter.from(eventEntity), null, NotificationType.DELETE);
+        notificationService.sendNotification(eventEntityConverter.from(eventEntity),
+                null,
+                NotificationType.DELETE,
+                currentUser);
         eventRepository.save(eventEntity);
 
     }
@@ -148,7 +151,7 @@ public class EventService {
         eventEntity.setMaxPlaces(newMaxPlaces);
         EventEntity saved = eventRepository.save(eventEntity);
         var savedEvent = eventEntityConverter.from(saved);
-        notificationService.sendNotification(oldEvent, savedEvent, NotificationType.UPDATE);
+        notificationService.sendNotification(oldEvent, savedEvent, NotificationType.UPDATE, currentUser);
         return savedEvent;
 
     }
@@ -332,7 +335,7 @@ public class EventService {
         eventEntity.setStatus(newEventStatus);
         var newEvent = eventEntityConverter.from(eventEntity);
 
-        notificationService.sendNotification(oldEvent, newEvent, NotificationType.STATUSCHANGE);
+        notificationService.sendNotification(oldEvent, newEvent, NotificationType.STATUSCHANGE, null);
 
     }
 }

@@ -8,6 +8,7 @@ import sokolov.spring.finalassignment.events.domain.Event;
 
 import sokolov.spring.finalassignment.events.domain.NotificationType;
 import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
+import sokolov.spring.finalassignment.users.domain.User;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,16 +28,16 @@ public class NotificationService {
         this.registrationEventRepository = registrationEventRepository;
     }
 
-    public void sendNotification(Event oldEvent, Event newEvent, NotificationType type) {
+    public void sendNotification(Event oldEvent, Event newEvent, NotificationType type, User user) {
         NotificationEvent notify = null;
 
         switch (type) {
             case UPDATE:
             case STATUSCHANGE:
-                notify = fromUpdate(oldEvent, newEvent);
+                notify = fromUpdate(oldEvent, newEvent, user);
                 break;
             case DELETE:
-                notify = fromDelete(oldEvent, null);
+                notify = fromDelete(oldEvent, null, user);
                 break;
         }
 
@@ -44,8 +45,8 @@ public class NotificationService {
         notificationSender.sendNotificationEvent(notify);
     }
 
-    private NotificationEvent fromUpdate (Event oldEvent, Event newEvent){
-        var user = authenticationService.getCurrentUser();
+    private NotificationEvent fromUpdate (Event oldEvent, Event newEvent, User user){
+
         var users =
                 registrationEventRepository.findAllByEventId(newEvent.id()).stream()
                         .map(RegistrationEntity::getUserId)
@@ -53,7 +54,7 @@ public class NotificationService {
 
         return new NotificationEvent(
                 newEvent.id(),
-                user.id(),
+                user == null ? null:user.id(),
                 newEvent.ownerId(),
                 oldEvent.name(),
                 newEvent.name(),
@@ -75,8 +76,7 @@ public class NotificationService {
     }
 
 
-    private NotificationEvent fromDelete (Event oldEvent, @Null Event newEvent){
-        var user = authenticationService.getCurrentUser();
+    private NotificationEvent fromDelete (Event oldEvent, @Null Event newEvent, User user){
         var users =
                 registrationEventRepository.findAllByEventId(oldEvent.id()).stream()
                         .map(RegistrationEntity::getUserId)
@@ -84,7 +84,7 @@ public class NotificationService {
 
         return new NotificationEvent(
                 oldEvent.id(),
-                user.id(),
+                user == null? null:user.id(),
                 null,
                 oldEvent.name(),
                 null,
