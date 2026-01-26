@@ -31,9 +31,9 @@ public class AuthenticationService {
 
     }
 
-    public User getCurrentUser(){
+    public User getCurrentUser() {
         var scHolder = SecurityContextHolder.getContext();
-        if (scHolder.getAuthentication() == null){
+        if (scHolder.getAuthentication() == null) {
             throw new IllegalArgumentException("user not authentication");
         }
         return (User) scHolder.getAuthentication().getPrincipal();

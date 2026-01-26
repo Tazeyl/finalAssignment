@@ -15,7 +15,7 @@ public class SchedulerConfig {
         this.eventSchedulingTime = eventSchedulingTime;
     }
 
-    public Integer getEventSchedulingTime(){
+    public Integer getEventSchedulingTime() {
         return eventSchedulingTime;
     }
 }

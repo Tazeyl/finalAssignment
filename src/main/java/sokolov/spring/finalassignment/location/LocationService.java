@@ -53,14 +53,14 @@ public class LocationService {
         return locationEntityConverter.fromEntity(getLocationEntityById(id));
     }
 
-    private LocationEntity getLocationEntityById(Long id){
+    private LocationEntity getLocationEntityById(Long id) {
         if (!locationRepository.existsById(id)) {
             throw new EntityNotFoundException(ENTITY_NOT_FOUND.formatted(id));
         }
         return locationRepository.getReferenceById(id);
     }
 
-    public boolean existsById(Long id){
+    public boolean existsById(Long id) {
         return locationRepository.existsById(id);
     }
 }

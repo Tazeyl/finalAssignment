@@ -3,7 +3,6 @@ package sokolov.spring.finalassignment.events.db.registration;
 import jakarta.persistence.*;
 import sokolov.spring.finalassignment.events.db.EventEntity;
 
-
 import java.time.LocalDateTime;
 
 @Entity

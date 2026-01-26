@@ -40,9 +40,9 @@ public class UserService {
     public User findByLogin(String login) {
         return getUser(
                 userRepository.findByLogin(login)
-                .orElseThrow(
-                        () -> new EntityNotFoundException("Не найден пользователь с login = %s".formatted(login))
-                )
+                        .orElseThrow(
+                                () -> new EntityNotFoundException("Не найден пользователь с login = %s".formatted(login))
+                        )
         );
     }
 

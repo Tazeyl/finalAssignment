@@ -13,8 +13,8 @@ public class EventScheduling {
     }
 
 
-    @Scheduled(fixedRateString =  "${event.scheduling.time}" )
-    public void eventsScheduling(){
+    @Scheduled(fixedRateString = "${event.scheduling.time}")
+    public void eventsScheduling() {
         eventService.scheduleEvents();
     }
 }

@@ -15,6 +15,7 @@ import sokolov.spring.finalassignment.events.db.EventRepository;
 import sokolov.spring.finalassignment.exception.BusinessException;
 import sokolov.spring.finalassignment.location.Location;
 import sokolov.spring.finalassignment.location.LocationService;
+import sokolov.spring.finalassignment.notification.NotificationService;
 import sokolov.spring.finalassignment.security.jwt.AuthenticationService;
 import sokolov.spring.finalassignment.users.domain.User;
 import sokolov.spring.finalassignment.users.domain.UserRole;
@@ -36,21 +37,23 @@ public class EventService {
     private final LocationService locationService;
     private final EventEntityConverter eventEntityConverter;
     private final AuthenticationService authenticationService;
+    private final NotificationService notificationService;
 
     public EventService(EventRepository eventRepository,
                         LocationService locationService,
                         EventEntityConverter eventEntityConverter,
-                        AuthenticationService authenticationService) {
+                        AuthenticationService authenticationService, NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.locationService = locationService;
         this.eventEntityConverter = eventEntityConverter;
         this.authenticationService = authenticationService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
     public Event createEvent(Event event) {
         Location location = getLocationById(event.locationId());
-        if (location.capacity() < event.maxPlaces()){
+        if (location.capacity() < event.maxPlaces()) {
             throw new BusinessException("Вместимость локации меньше максимальной вместимости мероприятия");
         }
 
@@ -75,16 +78,22 @@ public class EventService {
 
         if (!Objects.equals(currentUser.role(), UserRole.ADMIN)
                 && !Objects.equals(eventEntity.getOwnerId(), currentUser.id())
-        ){
+        ) {
             throw new BusinessException("Удалить событие может только владелец (или администратор)");
         }
 
 
-        if (!Objects.equals(eventEntity.getStatus(), EventStatus.WAIT_START)){
+        if (!Objects.equals(eventEntity.getStatus(), EventStatus.WAIT_START)) {
             throw new BusinessException("Невозможно удалить событие в статусе, отличающееся от WAIT_START");
         }
 
+
         eventEntity.setStatus(EventStatus.CANCELLED);
+
+        notificationService.sendNotification(eventEntityConverter.from(eventEntity),
+                null,
+                NotificationType.DELETE,
+                currentUser);
         eventRepository.save(eventEntity);
 
     }
@@ -94,11 +103,11 @@ public class EventService {
         return eventEntityConverter.from(getEventEntityById(id));
     }
 
-    private EventEntity getEventEntityById(Long id){
-        if (!eventRepository.existsById(id)){
+    private EventEntity getEventEntityById(Long id) {
+        if (!eventRepository.existsById(id)) {
             throw new EntityNotFoundException(ENTITY_NOT_FOUND.formatted(id));
         }
-        return  eventRepository.getReferenceById(id);
+        return eventRepository.getReferenceById(id);
     }
 
     @Transactional
@@ -106,20 +115,21 @@ public class EventService {
     public Event updateEvent(Long eventId, Event event) {
         User currentUser = authenticationService.getCurrentUser();
         EventEntity eventEntity = getEventEntityById(eventId);
+        var oldEvent = eventEntityConverter.from(eventEntity);
 
         if (!Objects.equals(currentUser.role(), UserRole.ADMIN)
                 && !Objects.equals(eventEntity.getOwnerId(), currentUser.id())
-        ){
+        ) {
             throw new BusinessException("Изменять событие может только владелец (или администратор)");
         }
 
 
-        if (!Objects.equals(eventEntity.getStatus(), EventStatus.WAIT_START)){
+        if (!Objects.equals(eventEntity.getStatus(), EventStatus.WAIT_START)) {
             throw new BusinessException("Невозможно изменить событие в статусе, отличающееся от WAIT_START");
         }
         Integer newMaxPlaces = event.maxPlaces();
 
-        if (newMaxPlaces < eventEntity.getOccupiedPlaces()){
+        if (newMaxPlaces < eventEntity.getOccupiedPlaces()) {
             throw new BusinessException(
                     "Невозможно изменить событие. Максимальное количество меньше количества уже зарегистрированных"
             );
@@ -129,10 +139,10 @@ public class EventService {
         eventEntity.setDate(event.date());
         eventEntity.setCost(event.cost());
         eventEntity.setDuration(event.duration());
-        if (!Objects.equals(event.locationId(), eventEntity.getLocationId())){
+        if (!Objects.equals(event.locationId(), eventEntity.getLocationId())) {
             // change location
             Location location = getLocationById(event.locationId());
-            if (location.capacity() < newMaxPlaces){
+            if (location.capacity() < newMaxPlaces) {
                 throw new BusinessException("Вместимость локации меньше максимальной вместимости мероприятия");
             }
 
@@ -140,13 +150,14 @@ public class EventService {
         }
         eventEntity.setMaxPlaces(newMaxPlaces);
         EventEntity saved = eventRepository.save(eventEntity);
-
-        return eventEntityConverter.from(saved);
+        var savedEvent = eventEntityConverter.from(saved);
+        notificationService.sendNotification(oldEvent, savedEvent, NotificationType.UPDATE, currentUser);
+        return savedEvent;
 
     }
 
 
-    private Location getLocationById(Long id){
+    private Location getLocationById(Long id) {
         return locationService.getById(id);
     }
 
@@ -237,9 +248,9 @@ public class EventService {
 
             // Фильтр по статусу события
             if (filter.eventStatus() != null && StringUtils.hasText(filter.eventStatus().toString())) {
-                    predicates.add(criteriaBuilder.equal(
-                            root.get("status"), filter.eventStatus()
-                    ));
+                predicates.add(criteriaBuilder.equal(
+                        root.get("status"), filter.eventStatus()
+                ));
             }
 
             // Сортировка по дате начала (по умолчанию)
@@ -262,20 +273,20 @@ public class EventService {
     @Modifying
     public void addRegistrationByEventId(Long eventId) {
         EventEntity eventEntity = getEventEntityById(eventId);
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED)) {
             throw new BusinessException("Невозможно зарегистрироваться на мероприятие. Мероприятие завершено");
         }
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)) {
             throw new BusinessException("Невозможно зарегистрироваться на мероприятие. Мероприятие отменено");
         }
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.STARTED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.STARTED)) {
             throw new BusinessException("Невозможно зарегистрироваться на мероприятие. Мероприятие уже началось");
         }
 
-        if ( eventEntity.getOccupiedPlaces() >= eventEntity.getMaxPlaces()){
+        if (eventEntity.getOccupiedPlaces() >= eventEntity.getMaxPlaces()) {
             throw new BusinessException("На мероприятия уже зарегистрировано максимальное количество посетителей");
         }
-        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces()+1);
+        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces() + 1);
 
 
     }
@@ -284,21 +295,21 @@ public class EventService {
     @Modifying
     public void deleteRegistrationByEventId(Long eventId) {
         EventEntity eventEntity = getEventEntityById(eventId);
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED)) {
             throw new BusinessException("Невозможно отменить регистрацию на мероприятие. Мероприятие завершено");
         }
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)) {
             throw new BusinessException("Невозможно отменить регистрацию на мероприятие. Мероприятие отменено");
         }
-        if (Objects.equals(eventEntity.getStatus(), EventStatus.STARTED)){
+        if (Objects.equals(eventEntity.getStatus(), EventStatus.STARTED)) {
             throw new BusinessException("Невозможно отменить регистрацию на мероприятие. Мероприятие уже началось");
         }
 
-        if (eventEntity.getOccupiedPlaces()<= 0){
+        if (eventEntity.getOccupiedPlaces() <= 0) {
             // Проблемы с ядром регистрации
             throw new IllegalArgumentException("На мероприятие никто не зарегистрирован");
         }
-        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces()-1);
+        eventEntity.setOccupiedPlaces(eventEntity.getOccupiedPlaces() - 1);
     }
 
     @Transactional
@@ -313,15 +324,18 @@ public class EventService {
 
     private void moveToNewStatusEvent(EventEntity eventEntity, EventStatus newEventStatus) {
         if (Objects.equals(eventEntity.getStatus(), EventStatus.FINISHED) ||
-                Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)){
+                Objects.equals(eventEntity.getStatus(), EventStatus.CANCELLED)) {
             throw new IllegalArgumentException("Попытка перевести мероприятие в некорректный статус");
         }
-        if (Objects.equals(eventEntity.getStatus(), newEventStatus)){
+        if (Objects.equals(eventEntity.getStatus(), newEventStatus)) {
             LOGGER.error("Попытка перевести event id = {} в тот же статус {}", eventEntity.getId(), newEventStatus);
             return;
         }
-
+        var oldEvent = eventEntityConverter.from(eventEntity);
         eventEntity.setStatus(newEventStatus);
+        var newEvent = eventEntityConverter.from(eventEntity);
+
+        notificationService.sendNotification(oldEvent, newEvent, NotificationType.STATUSCHANGE, null);
 
     }
 }

@@ -20,11 +20,11 @@ public class InitUsers {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void init(){
+    public void init() {
         initUsers();
     }
 
-    public void initUsers(){
+    public void initUsers() {
 
         initUser(UserRole.ADMIN);
         initUser(UserRole.USER);
@@ -34,7 +34,7 @@ public class InitUsers {
 
     private void initUser(UserRole userRole) {
         String login = userRole.toString().toLowerCase();
-        if (userRepository.existsByLogin(login)){
+        if (userRepository.existsByLogin(login)) {
             return;
         }
         String hashPassword = passwordEncoder.encode(login);
